@@ -1,0 +1,22 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+# Python
+__pycache__/
+*.pyc
+
+# Virtual env
+.venv/
+venv/
+
+# Data
+raw_images/
+faces/
+dataset/
+dataset_augmented/
+
+# OS
+.DS_Store
+Thumbs.db
