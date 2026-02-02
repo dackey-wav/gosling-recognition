@@ -7,19 +7,32 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import os
 
-# --- KONFIGURACJA ---
-TEST_DIR = '../dataset/test' # Upewnij się, że ścieżka jest poprawna
+# --- USTAWIENIA ŚCIEŻEK (POPRAWIONE) ---
+# Pobieramy ścieżkę do folderu, w którym znajduje się TEN skrypt (code/)
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR) # Katalog wyżej (gosling-recognition/)
+
+# Budujemy pełne ścieżki
+TEST_DIR = os.path.join(PROJECT_ROOT, 'dataset', 'test')
+MODEL_PATH = os.path.join(SCRIPT_DIR, "best_gosling_model.pth")
 IMG_SIZE = 224
 BATCH_SIZE = 32
-# Tutaj podajemy NOWY plik z wagami!
-MODEL_PATH = "best_gosling_model.pth" 
 
 # Wykrywanie sprzętu
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"🚀 Testowanie na: {device}")
+print(f"📁 Folder testowy: {TEST_DIR}")
+print(f"💾 Model: {MODEL_PATH}")
 
-# 1. Transformacje (Muszą być identyczne jak w train_optimized.py!)
-# ResNet wymaga normalizacji ImageNet, a nie 0.5/0.5/0.5
+if not os.path.exists(TEST_DIR):
+    print("❌ BŁĄD: Folder dataset/test nie istnieje! Uruchom najpierw split-dataset.py.")
+    exit()
+
+if not os.path.exists(MODEL_PATH):
+    print(f"❌ BŁĄD: Plik modelu nie istnieje: {MODEL_PATH}")
+    exit()
+
+# 1. Transformacje (Identyczne jak w treningu ResNet)
 mean = [0.485, 0.456, 0.406]
 std = [0.229, 0.224, 0.225]
 
@@ -35,19 +48,17 @@ test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
 # 3. Odtworzenie architektury ResNet18
 print("🧠 Budowanie modelu ResNet18...")
-model = models.resnet18(weights=None) # Nie pobieramy wag z neta, bo zaraz załadujemy swoje
+model = models.resnet18(weights=None) 
 num_ftrs = model.fc.in_features
-model.fc = nn.Linear(num_ftrs, 1) # Zmieniamy ostatnią warstwę tak jak w treningu
-
-# Przenosimy model na GPU
+model.fc = nn.Linear(num_ftrs, 1) 
 model = model.to(device)
 
-# 4. Ładowanie Twoich wytrenowanych wag
-if os.path.exists(MODEL_PATH):
-    model.load_state_dict(torch.load(MODEL_PATH))
+# 4. Ładowanie wag
+try:
+    model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
     print(f"✅ Załadowano wagi z pliku: {MODEL_PATH}")
-else:
-    print(f"❌ BŁĄD: Nie znaleziono pliku {MODEL_PATH}!")
+except Exception as e:
+    print(f"❌ BŁĄD ładowania wag: {e}")
     exit()
 
 model.eval()
@@ -61,8 +72,6 @@ print(f"Rozpoczynam testowanie na {len(test_dataset)} obrazkach...")
 with torch.no_grad():
     for images, labels in test_loader:
         images = images.to(device)
-        # ResNet nie ma sigmoida na końcu w treningu (BCEWithLogitsLoss),
-        # więc musimy go dodać teraz ręcznie, żeby dostać prawdopodobieństwo.
         outputs = model(images)
         preds = torch.sigmoid(outputs) > 0.5 
         
@@ -81,6 +90,5 @@ plt.xlabel('Przewidziane')
 plt.ylabel('Prawdziwe')
 plt.title('Macierz Pomyłek - ResNet18')
 
-# Zapis wykresu do pliku zamiast show()
 plt.savefig('wynik_resnet.png')
 print("Wykres zapisano jako 'wynik_resnet.png'")
