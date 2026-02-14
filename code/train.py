@@ -5,7 +5,7 @@ from torchvision import datasets, transforms, models
 from torch.utils.data import DataLoader
 import os
 import copy
-from tqdm import tqdm  # Pasek postępu
+from tqdm import tqdm
 
 # --- KONFIGURACJA ---
 TRAIN_DIR = '../dataset/train' 

@@ -7,32 +7,32 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import os
 
-# --- USTAWIENIA ŚCIEŻEK (POPRAWIONE) ---
-# Pobieramy ścieżkę do folderu, w którym znajduje się TEN skrypt (code/)
+# --- PATH SETTINGS ---
+# Get path to the folder containing THIS script (code/)
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_ROOT = os.path.dirname(SCRIPT_DIR) # Katalog wyżej (gosling-recognition/)
+PROJECT_ROOT = os.path.dirname(SCRIPT_DIR) # Parent directory (gosling-recognition/)
 
-# Budujemy pełne ścieżki
+# Build full paths
 TEST_DIR = os.path.join(PROJECT_ROOT, 'dataset', 'test')
 MODEL_PATH = os.path.join(SCRIPT_DIR, "best_gosling_model.pth")
 IMG_SIZE = 224
 BATCH_SIZE = 32
 
-# Wykrywanie sprzętu
+# Hardware detection
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"🚀 Testowanie na: {device}")
-print(f"📁 Folder testowy: {TEST_DIR}")
+print(f"🚀 Testing on: {device}")
+print(f"📁 Test directory: {TEST_DIR}")
 print(f"💾 Model: {MODEL_PATH}")
 
 if not os.path.exists(TEST_DIR):
-    print("❌ BŁĄD: Folder dataset/test nie istnieje! Uruchom najpierw split-dataset.py.")
+    print("❌ Error: dataset/test doesn\'t exist! Run split-dataset.py first.")
     exit()
 
 if not os.path.exists(MODEL_PATH):
-    print(f"❌ BŁĄD: Plik modelu nie istnieje: {MODEL_PATH}")
+    print(f"❌ Error: Model file doesn\'t exist: {MODEL_PATH}")
     exit()
 
-# 1. Transformacje (Identyczne jak w treningu ResNet)
+# 1. Transformations (Identical to training ResNet)
 mean = [0.485, 0.456, 0.406]
 std = [0.229, 0.224, 0.225]
 
@@ -42,32 +42,32 @@ test_transforms = transforms.Compose([
     transforms.Normalize(mean, std)
 ])
 
-# 2. Ładowanie danych
+# 2. Loading data
 test_dataset = datasets.ImageFolder(TEST_DIR, transform=test_transforms)
 test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
-# 3. Odtworzenie architektury ResNet18
-print("🧠 Budowanie modelu ResNet18...")
+# 3. Building the ResNet18 model
+print("🧠 Building model ResNet18...")
 model = models.resnet18(weights=None) 
 num_ftrs = model.fc.in_features
 model.fc = nn.Linear(num_ftrs, 1) 
 model = model.to(device)
 
-# 4. Ładowanie wag
+# 4. Loading weights
 try:
     model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
-    print(f"✅ Załadowano wagi z pliku: {MODEL_PATH}")
+    print(f"✅ Loaded weights from: {MODEL_PATH}")
 except Exception as e:
-    print(f"❌ BŁĄD ładowania wag: {e}")
+    print(f"❌ Error loading weights: {e}")
     exit()
 
 model.eval()
 
-# 5. Wielki Test
+# 5. Large test
 all_preds = []
 all_labels = []
 
-print(f"Rozpoczynam testowanie na {len(test_dataset)} obrazkach...")
+print(f"Starting test on {len(test_dataset)} images...")
 
 with torch.no_grad():
     for images, labels in test_loader:
@@ -78,17 +78,16 @@ with torch.no_grad():
         all_preds.extend(preds.cpu().numpy().flatten())
         all_labels.extend(labels.numpy())
 
-# 6. Wyniki i Raport
-print("\n--- RAPORT KLASYFIKACJI (ResNet18) ---")
+# 6. Results and Report
 print(classification_report(all_labels, all_preds, target_names=test_dataset.classes))
 
-# Macierz pomyłek
+# Confusion matrix
 cm = confusion_matrix(all_labels, all_preds)
 plt.figure(figsize=(8, 6))
 sns.heatmap(cm, annot=True, fmt='d', xticklabels=test_dataset.classes, yticklabels=test_dataset.classes, cmap='Blues')
-plt.xlabel('Przewidziane')
-plt.ylabel('Prawdziwe')
-plt.title('Macierz Pomyłek - ResNet18')
+plt.xlabel('Predicted')
+plt.ylabel('True')
+plt.title('Confusion Matrix - ResNet18')
 
-plt.savefig('wynik_resnet.png')
-print("Wykres zapisano jako 'wynik_resnet.png'")
+plt.savefig('result_resnet.png')
+print("Saved as 'result_resnet.png'")

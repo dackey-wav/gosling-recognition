@@ -2,9 +2,9 @@ import os
 import random
 import shutil
 
-# === ПУТИ ПРОЕКТА ===
+# === PROJECT PATHS ===
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))          # data-scripts
-PROJECT_ROOT = os.path.abspath(os.path.join(BASE_DIR, ".."))   # корень проекта
+PROJECT_ROOT = os.path.abspath(os.path.join(BASE_DIR, ".."))   # project root
 
 SRC = os.path.join(PROJECT_ROOT, "faces")
 DST = os.path.join(PROJECT_ROOT, "dataset")
@@ -12,17 +12,17 @@ DST = os.path.join(PROJECT_ROOT, "dataset")
 CLASSES = ["gosling", "negative"]
 SPLITS = {"train": 0.7, "val": 0.15, "test": 0.15}
 
-random.seed(42)  # чтобы сплит был одинаковым каждый запуск
+random.seed(42)  # reproducible split
 
 print(f"[INFO] Source: {SRC}")
 print(f"[INFO] Dest:   {DST}")
 
-# === СОЗДАЁМ ПАПКИ ===
+# === CREATE DIRECTORIES ===
 for split in SPLITS:
     for cls in CLASSES:
         os.makedirs(os.path.join(DST, split, cls), exist_ok=True)
 
-# === СПЛИТ ===
+# === SPLIT ===
 for cls in CLASSES:
     class_dir = os.path.join(SRC, cls)
 
@@ -35,8 +35,8 @@ for cls in CLASSES:
         if f.lower().endswith((".jpg", ".jpeg", ".png"))
     ]
 
-    files.sort()           # стабильный порядок
-    random.shuffle(files)  # перемешиваем
+    files.sort()           # stable order
+    random.shuffle(files)  # randomize
 
     n = len(files)
     train_end = int(SPLITS["train"] * n)
@@ -58,7 +58,7 @@ for cls in CLASSES:
             src_path = os.path.join(class_dir, f)
             dst_path = os.path.join(DST, split, cls, f)
 
-            # 🔥 если уже есть — пропускаем
+            # Skip if already exists
             if os.path.exists(dst_path):
                 continue
 
