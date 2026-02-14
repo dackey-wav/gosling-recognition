@@ -1,0 +1,13 @@
+pandas
+Pillow
+scikit-learn
+scipy
+facenet-pytorch
+tqdm
+uvicorn
+python-multipart
+fastapi
+matplotlib
+seaborn
+torch
+torchvision
