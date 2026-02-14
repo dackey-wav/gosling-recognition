@@ -19,6 +19,13 @@ A deep learning project that detects whether a face in a photo belongs to **Ryan
 │   ├── clean-images.py        # Remove corrupted images
 │   ├── remove-duplicates.py   # Remove duplicate images
 │   └── split-dataset.py       # Train/val/test split (70/15/15)
+├── docs/
+│   └── images/
+│       ├── web-ui.png
+│       ├── confusion-matrix.png
+│       ├── false-positives.png
+│       └── false-negatives.png
+├── README.md
 ├── dataset/                   # Split dataset (train/val/test)
 ├── faces/                     # Cropped faces (gosling/negative)
 ├── raw_images/                # Raw downloaded images
@@ -106,9 +113,9 @@ Results (confusion matrix, false positives/negatives) are saved to `code/analysi
 ![Confusion Matrix](docs/images/confusion-matrix.png)
 
 ### Error Analysis
-| False Positives | False Negatives |
+| False Positive | False Negative |
 |:-:|:-:|
-| ![FP](docs/images/false-positives.png) | ![FN](docs/images/false-negatives.png) |
+| ![FP](docs/images/false-positive.png) | ![FN](docs/images/false-negative.png) |
 
 ## Data Pipeline
 
